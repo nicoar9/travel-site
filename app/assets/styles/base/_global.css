@@ -7,7 +7,7 @@ img {
   max-width: 100%;
   height: auto;
 }
-
+/*allows browser to take into account margins/paddings when using % */
 * {
   box-sizing: border-box;
 }

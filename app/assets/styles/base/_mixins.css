@@ -15,7 +15,7 @@
     @mixin-content;
   }
 }
-
+/* creates a empty div for clearing floating elements*/
 @define-mixin clearfix {
   &::after {
     content: "";
