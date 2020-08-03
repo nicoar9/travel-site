@@ -1,6 +1,50 @@
 /******/ (function(modules) { // webpackBootstrap
+/******/ 	// install a JSONP callback for chunk loading
+/******/ 	function webpackJsonpCallback(data) {
+/******/ 		var chunkIds = data[0];
+/******/ 		var moreModules = data[1];
+/******/
+/******/
+/******/ 		// add "moreModules" to the modules object,
+/******/ 		// then flag all "chunkIds" as loaded and fire callback
+/******/ 		var moduleId, chunkId, i = 0, resolves = [];
+/******/ 		for(;i < chunkIds.length; i++) {
+/******/ 			chunkId = chunkIds[i];
+/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 				resolves.push(installedChunks[chunkId][0]);
+/******/ 			}
+/******/ 			installedChunks[chunkId] = 0;
+/******/ 		}
+/******/ 		for(moduleId in moreModules) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+/******/ 				modules[moduleId] = moreModules[moduleId];
+/******/ 			}
+/******/ 		}
+/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
+/******/
+/******/ 		while(resolves.length) {
+/******/ 			resolves.shift()();
+/******/ 		}
+/******/
+/******/ 	};
+/******/
+/******/
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
+/******/
+/******/ 	// object to store loaded and loading chunks
+/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 	// Promise = chunk loading, 0 = chunk loaded
+/******/ 	var installedChunks = {
+/******/ 		"main": 0
+/******/ 	};
+/******/
+/******/
+/******/
+/******/ 	// script path function
+/******/ 	function jsonpScriptSrc(chunkId) {
+/******/ 		return __webpack_require__.p + "" + chunkId + ".bundled.js"
+/******/ 	}
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -26,6 +70,67 @@
 /******/ 		return module.exports;
 /******/ 	}
 /******/
+/******/ 	// This file contains only the entry chunk.
+/******/ 	// The chunk loading function for additional chunks
+/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
+/******/ 		var promises = [];
+/******/
+/******/
+/******/ 		// JSONP chunk loading for javascript
+/******/
+/******/ 		var installedChunkData = installedChunks[chunkId];
+/******/ 		if(installedChunkData !== 0) { // 0 means "already installed".
+/******/
+/******/ 			// a Promise means "currently loading".
+/******/ 			if(installedChunkData) {
+/******/ 				promises.push(installedChunkData[2]);
+/******/ 			} else {
+/******/ 				// setup Promise in chunk cache
+/******/ 				var promise = new Promise(function(resolve, reject) {
+/******/ 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
+/******/ 				});
+/******/ 				promises.push(installedChunkData[2] = promise);
+/******/
+/******/ 				// start chunk loading
+/******/ 				var script = document.createElement('script');
+/******/ 				var onScriptComplete;
+/******/
+/******/ 				script.charset = 'utf-8';
+/******/ 				script.timeout = 120;
+/******/ 				if (__webpack_require__.nc) {
+/******/ 					script.setAttribute("nonce", __webpack_require__.nc);
+/******/ 				}
+/******/ 				script.src = jsonpScriptSrc(chunkId);
+/******/
+/******/ 				// create error before stack unwound to get useful stacktrace later
+/******/ 				var error = new Error();
+/******/ 				onScriptComplete = function (event) {
+/******/ 					// avoid mem leaks in IE.
+/******/ 					script.onerror = script.onload = null;
+/******/ 					clearTimeout(timeout);
+/******/ 					var chunk = installedChunks[chunkId];
+/******/ 					if(chunk !== 0) {
+/******/ 						if(chunk) {
+/******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 							var realSrc = event && event.target && event.target.src;
+/******/ 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 							error.name = 'ChunkLoadError';
+/******/ 							error.type = errorType;
+/******/ 							error.request = realSrc;
+/******/ 							chunk[1](error);
+/******/ 						}
+/******/ 						installedChunks[chunkId] = undefined;
+/******/ 					}
+/******/ 				};
+/******/ 				var timeout = setTimeout(function(){
+/******/ 					onScriptComplete({ type: 'timeout', target: script });
+/******/ 				}, 120000);
+/******/ 				script.onerror = script.onload = onScriptComplete;
+/******/ 				document.head.appendChild(script);
+/******/ 			}
+/******/ 		}
+/******/ 		return Promise.all(promises);
+/******/ 	};
 /******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
@@ -79,6 +184,16 @@
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
 /******/
+/******/ 	// on error function for async loading
+/******/ 	__webpack_require__.oe = function(err) { console.error(err); throw err; };
+/******/
+/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
+/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+/******/ 	jsonpArray.push = webpackJsonpCallback;
+/******/ 	jsonpArray = jsonpArray.slice();
+/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
+/******/ 	var parentJsonpFunction = oldJsonpFunction;
+/******/
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = "./app/assets/scripts/App.js");
@@ -94,7 +209,7 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _styles_styles_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../styles/styles.css */ \"./app/assets/styles/styles.css\");\n/* harmony import */ var _styles_styles_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_styles_styles_css__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var _modules_MobileMenu__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/MobileMenu */ \"./app/assets/scripts/modules/MobileMenu.js\");\n/* harmony import */ var _modules_RevealOnScroll__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/RevealOnScroll */ \"./app/assets/scripts/modules/RevealOnScroll.js\");\n/* harmony import */ var _modules_StickyHeader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/StickyHeader */ \"./app/assets/scripts/modules/StickyHeader.js\");\n/* harmony import */ var _modules_Modal__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/Modal */ \"./app/assets/scripts/modules/Modal.js\");\n\r\n\r\n\r\n\r\n\r\n\r\nnew _modules_Modal__WEBPACK_IMPORTED_MODULE_4__[\"default\"]()\r\nlet stickyHeader = new _modules_StickyHeader__WEBPACK_IMPORTED_MODULE_3__[\"default\"]()\r\nnew _modules_RevealOnScroll__WEBPACK_IMPORTED_MODULE_2__[\"default\"](document.querySelectorAll(\".feature-item\"), 75);\r\nnew _modules_RevealOnScroll__WEBPACK_IMPORTED_MODULE_2__[\"default\"](document.querySelectorAll(\".testimonial\"), 60);\r\n\r\nlet mobileMenu = new _modules_MobileMenu__WEBPACK_IMPORTED_MODULE_1__[\"default\"]();\r\n\r\nif (false) {}\r\n\r\n\r\n\n\n//# sourceURL=webpack:///./app/assets/scripts/App.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _styles_styles_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../styles/styles.css */ \"./app/assets/styles/styles.css\");\n/* harmony import */ var _styles_styles_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_styles_styles_css__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var _modules_MobileMenu__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/MobileMenu */ \"./app/assets/scripts/modules/MobileMenu.js\");\n/* harmony import */ var _modules_RevealOnScroll__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/RevealOnScroll */ \"./app/assets/scripts/modules/RevealOnScroll.js\");\n/* harmony import */ var _modules_StickyHeader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/StickyHeader */ \"./app/assets/scripts/modules/StickyHeader.js\");\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nnew _modules_StickyHeader__WEBPACK_IMPORTED_MODULE_3__[\"default\"]()\r\nnew _modules_RevealOnScroll__WEBPACK_IMPORTED_MODULE_2__[\"default\"](document.querySelectorAll(\".feature-item\"), 75);\r\nnew _modules_RevealOnScroll__WEBPACK_IMPORTED_MODULE_2__[\"default\"](document.querySelectorAll(\".testimonial\"), 60);\r\nnew _modules_MobileMenu__WEBPACK_IMPORTED_MODULE_1__[\"default\"]();\r\nlet modal\r\n\r\ndocument.querySelectorAll(\".open-modal\").forEach(el => {\r\n    el.addEventListener(\"click\", e => {\r\n        e.preventDefault()\r\n        if (typeof modal == \"undefined\") {\r\n            __webpack_require__.e(/*! import() | modal */ \"modal\").then(__webpack_require__.bind(null, /*! ./modules/Modal */ \"./app/assets/scripts/modules/Modal.js\")).then(x => {\r\n                modal = new x.default()\r\n                setTimeout(() => modal.openTheModal(), 20)\r\n             }).catch(() => console.log(\"There was a problem.\"))\r\n        } else {\r\n            modal.openTheModal()\r\n        }\r\n    })\r\n})\r\n\r\nif (false) {}\r\n\r\n\r\n\n\n//# sourceURL=webpack:///./app/assets/scripts/App.js?");
 
 /***/ }),
 
@@ -107,18 +222,6 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _sty
 
 "use strict";
 eval("__webpack_require__.r(__webpack_exports__);\nclass MobileMenu {\r\n    constructor() {\r\n        this.menuIcon = document.querySelector(\".site-header__menu-icon\")\r\n        this.menuContent = document.querySelector(\".site-header__menu-content\")\r\n        this.siteHeader = document.querySelector(\".site-header\")\r\n        this.events()\r\n\r\n        \r\n    }\r\n\r\n    events() {\r\n        this.menuIcon.addEventListener(\"click\", () => this.toggleTheMenu())\r\n    }\r\n\r\n    toggleTheMenu() {\r\n        this.menuContent.classList.toggle(\"site-header__menu-content--is-visible\")\r\n        this.siteHeader.classList.toggle(\"site-header--is-expanded\")\r\n        this.menuIcon.classList.toggle(\"site-header__menu-icon--close-x\")\r\n    }\r\n}\r\n\r\n/* harmony default export */ __webpack_exports__[\"default\"] = (MobileMenu);\n\n//# sourceURL=webpack:///./app/assets/scripts/modules/MobileMenu.js?");
-
-/***/ }),
-
-/***/ "./app/assets/scripts/modules/Modal.js":
-/*!*********************************************!*\
-  !*** ./app/assets/scripts/modules/Modal.js ***!
-  \*********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\nclass Modal {\r\n    constructor() {\r\n        this.injectHTML()\r\n        this.modal = document.querySelector(\".modal\")\r\n        this.closeIcon = document.querySelector(\".modal__close\")\r\n        this.openModalButtons = document.querySelectorAll(\".open-modal\")\r\n        this.events()\r\n    }\r\n\r\n    events() {\r\n        // listen for open click\r\n         this.openModalButtons.forEach(el => el.addEventListener(\"click\", e => this.openTheModal(e)))\r\n        // listen for close click\r\n        this.closeIcon.addEventListener(\"click\", () => this.closeTheModal())\r\n\r\n        // pushes any key\r\n        document.addEventListener(\"keyup\", e => this.keyPressHandler(e))\r\n    }\r\n\r\n\r\n    keyPressHandler(e) {\r\n        if (e.keyCode == 27) {\r\n            this.closeTheModal()\r\n        }\r\n    }\r\n\r\n    openTheModal(e) {\r\n        e.preventDefault()\r\n        this.modal.classList.add(\"modal--is-visible\")\r\n    }\r\n\r\n    closeTheModal() {\r\n        this.modal.classList.remove(\"modal--is-visible\")\r\n    }\r\n\r\n    injectHTML() {\r\n\r\n        document.body.insertAdjacentHTML('beforeend', `\r\n        <div class=\"modal\">\r\n    <div class=\"modal__inner\">\r\n      <h2 class=\"section-title section-title--blue section-title--less-margin\"><img src=\"assets/images/icons/mail.svg\" class=\"section-title__icon\"> Get in <strong>Touch</strong></h2>\r\n      <div class=\"wrapper wrapper--narrow\">\r\n        <p class=\"modal__description\">We will have an online order system in place soon. Until then, connect with us on any of the platforms below!</p>\r\n      </div>\r\n\r\n      <div class=\"social-icons\">\r\n        <a href=\"#\" class=\"social-icons__icon\"><img src=\"assets/images/icons/facebook.svg\" alt=\"Facebook\"></a>\r\n        <a href=\"#\" class=\"social-icons__icon\"><img src=\"assets/images/icons/twitter.svg\" alt=\"Twitter\"></a>\r\n        <a href=\"#\" class=\"social-icons__icon\"><img src=\"assets/images/icons/instagram.svg\" alt=\"Instagram\"></a>\r\n        <a href=\"#\" class=\"social-icons__icon\"><img src=\"assets/images/icons/youtube.svg\" alt=\"YouTube\"></a>\r\n      </div>\r\n    </div>\r\n    <div class=\"modal__close\">X</div>\r\n  </div>\r\n        `)\r\n    }\r\n}\r\n\r\n/* harmony default export */ __webpack_exports__[\"default\"] = (Modal);\n\n//# sourceURL=webpack:///./app/assets/scripts/modules/Modal.js?");
 
 /***/ }),
 
